@@ -1,0 +1,6 @@
+---
+- :custId: 154439
+  :displayName: Daniele Guttuso
+  :template: ctc-daniele-guttuso
+  :text: <%= name %> // iR <%= roadIrating %> // <%= roadLicense %>
+
