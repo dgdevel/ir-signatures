@@ -2,5 +2,5 @@
 - :custId: 154439
   :displayName: Daniele Guttuso
   :template: ctc-daniele-guttuso
-  :text: <%= name %> // iR <%= roadIrating %> // <%= roadLicense %>
+  :text: <%= proxy.name %> // iR <%= proxy.irating(2) %> // <%= proxy.license_class(2) %>
 

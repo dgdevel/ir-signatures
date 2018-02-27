@@ -1,0 +1,3 @@
+[submodule "ruby-ir-httpdata"]
+	path = ruby-ir-httpdata
+	url = git://github.com/dgdevel/ruby-ir-httpdata.git

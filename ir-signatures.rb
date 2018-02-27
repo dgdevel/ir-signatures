@@ -5,30 +5,7 @@ require 'cgi'
 require 'erb'
 require 'yaml'
 
-$client = nil
-$cookies = nil
-
-def login(username, password)
-  $client = Net::HTTP.new 'members.iracing.com', 80
-  # $client.set_debug_output $stderr
-  res = $client.post('/jforum/Login',
-    "username=#{CGI::escape username}&password=#{CGI::escape password}")
-  if res['Location'] and res['Location'] == 'http://members.iracing.com/jforum'
-    $cookies = res.to_hash['set-cookie']&.collect{|ea| ea[/^.*?;/]}.join
-  else
-    $client = nil
-  end
-  $client != nil
-end
-
-# ugly hack, but better than the rest of the APIs
-def get_member_brief_stats(custid)
-  res = $client.get("/membersite/member/CareerStats.do?custid=#{custid}", {'Cookie' => $cookies})
-  start = res.body.index('buf = \'{"memberSince"') + 7
-  length = res.body.index("MemberProfile.driver = extractJSON") - 3 - start
-  data = res.body[start, length]
-  JSON.parse data
-end
+require './ruby-ir-httpdata/ir-httpdata'
 
 credentials = YAML.load IO.read 'credentials.yaml'
 templates = YAML.load IO.read 'templates.yaml'
@@ -39,38 +16,54 @@ if not login(credentials[0][:username], credentials[0][:password])
   fail
 end
 
+class DataProxy
+  @custId
+  @name
+  @stats
+  def initialize(custId, name)
+    @custId = custId
+    @name = name
+  end
+
+  def name
+    @name
+  end
+
+  #category: Oval, Road, Dirt+Oval, Dirt+Road
+  #catId: 1,2,3,4
+
+  def wins(category)
+    if not @stats
+      @stats = get_career_stats(@custId)
+    end
+    (@stats.select do |s| s['category'] == category end).first['wins']
+  end
+
+  def starts(category)
+    if not @stats
+      @stats = get_career_stats(@custId)
+    end
+    (@stats.select do |s| s['category'] == category end).first['starts']
+  end
+
+  def irating(catId)
+    get_irating(@custId, catId)
+  end
+
+  def license_class(catId)
+    get_license_class(@custId, catId)
+  end
+end
+
 drivers.each do |driver|
   sleep(5)
-  stats = get_member_brief_stats(driver[:custId])
-  if not stats
-    puts "Cannot fetch stats for #{driver[:custId]}"
-    return
-  end
+  proxy = DataProxy.new(driver[:custId], driver[:displayName])
   template = (templates.select do |template| template[:name] == driver[:template] end).first
-  driverData = {
-    :name => driver[:displayName]
-  }
-  stats['licenses'].each do |lic|
-    irating = lic['iRating']
-    license = "#{CGI.parse('v=' + lic['licGroupDisplayName'])['v'][0].sub(/Class /, '')} #{lic['srPrime']}.#{lic['srSub']}"
-    if lic['catId'] == 1
-      driverData[:ovalIrating] = irating
-      driverData[:ovalLicense] = license
-    elsif lic['catId'] == 2
-      driverData[:roadIrating] = irating
-      driverData[:roadLicense] = license
-    elsif lic['catId'] == 3
-      driverData[:dirtovalIrating] = irating
-      driverData[:dirtovalLicense] = license
-    elsif lic['catId'] == 4
-      driverData[:dirtroadIrating] = irating
-      driverData[:dirtroadLicense] = license
-    end
-  end
   if template == nil
     puts "Template #{driver[:template]} not found for #{driver[:displayName]}"
   else
-    text = "\"#{ERB.new(driver[:text]).result(OpenStruct.new(driverData).instance_eval { binding })}\""
+    namespace = OpenStruct.new({:proxy => proxy})
+    text = "\"#{ERB.new(driver[:text]).result(namespace.instance_eval { binding })}\""
     command =  "convert templates/#{template[:name]}.png "
     command << "-font '#{template[:fontFamily]}' -pointsize #{template[:fontSize]} "
     if template[:outline]

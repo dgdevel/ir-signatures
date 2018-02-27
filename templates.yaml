@@ -1,10 +1,10 @@
 ---
 - :name: ctc-daniele-guttuso
   :fontFamily: Liberation-Sans-Bold-Italic
-  :fontColor: rgb(248,170,24)
+  :fontColor: rgb(249,173,25)
   :outline: true
   :outlineColor: black
-  :fontSize: 20
+  :fontSize: 16
   :textPositionX: 2
-  :textPositionY: 72
+  :textPositionY: 73
 
