@@ -1,6 +1,6 @@
 ---
 - :custId: 154439
   :displayName: Daniele Guttuso
-  :template: ctc-daniele-guttuso
-  :text: <%= proxy.name %> // iR <%= proxy.irating(2) %> // <%= proxy.license_class(2) %>
+  :template: ctc-daniele-guttuso-2
+  :text: <%= proxy.name %>\niR <%= proxy.irating(2) %> // <%= proxy.license_class(2) %>
 

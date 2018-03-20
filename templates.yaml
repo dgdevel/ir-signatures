@@ -7,4 +7,12 @@
   :fontSize: 16
   :textPositionX: 2
   :textPositionY: 73
+- :name: ctc-daniele-guttuso-2
+  :fontFamily: Liberation-Serif-Bold
+  :fontColor: rgb(249,173,25)
+  :outline: true
+  :outlineColor: black
+  :fontSize: 16
+  :textPositionX: 3
+  :textPositionY: 57
 
